@@ -1,35 +1,58 @@
 <template>
   <div id="app">
-    <Todos v-bind:todos="todos" />
+    <Header />
+    <AddTodo v-on:add-todo="addTodo" />
+    <Todos v-bind:todos="todos" v-on:del-todo="deleteTodo" />
   </div>
 </template>
 
 <script>
-import Todos from "./components/Todo";
+import Todos from "./components/Todos";
+import Header from "./components/layout/Header";
+import AddTodo from "./components/AddTodo";
+import axios from "axios";
 
 export default {
   name: "app",
-  components: { Todos },
+  components: { Todos, Header, AddTodo },
   data() {
     return {
-      todos: [
-        {
-          id: 1,
-          title: "Todo One",
-          completed: false
-        },
-        {
-          id: 2,
-          title: "Todo Two",
-          completed: true
-        },
-        {
-          id: 3,
-          title: "Todo Three",
-          completed: false
-        }
-      ]
+      todos: []
     };
+  },
+  methods: {
+    deleteTodo(id) {
+      console.log("deleteTodo ", id);
+      axios
+        .delete(`http://jsonplaceholder.typicode.com/todos/${id}`)
+        .then(res => {
+          console.log("delete item then... ", res.data);
+          this.todos = this.todos.filter(todo => todo.id !== id);
+        })
+        .catch(err => console.log(err));
+    },
+    addTodo(newTodo) {
+      const { title, completed } = newTodo;
+      axios
+        .post("http://jsonplaceholder.typicode.com/todos", {
+          title,
+          completed
+        })
+        .then(res => {
+          console.log("post request ", res.data);
+          this.todos = [...this.todos, res.data];
+        })
+        .catch(err => console.log(err));
+    }
+  },
+  created() {
+    axios
+      .get("https://jsonplaceholder.typicode.com/todos?_limit=5")
+      .then(res => {
+        console.log("get data... ", res.data);
+        this.todos = res.data;
+      })
+      .catch(err => console.log("err ", err));
   }
 };
 </script>
@@ -44,5 +67,16 @@ export default {
 body {
   font-family: Arial, Helvetica, sans-serif;
   line-height: 1.4;
+}
+.btn {
+  display: inline-block;
+  border: none;
+  background: #555;
+  color: #fff;
+  padding: 7px 20px;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #666;
 }
 </style>
